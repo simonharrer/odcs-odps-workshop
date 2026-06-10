@@ -106,8 +106,7 @@ Your goal is to define a data contract so that consumers of your data know exact
 7. Save the contract locally as `orders_v1.odcs.yaml` by clicking the **Save** button on the top right.
    Place it into the workshop repository folder (move it there if your browser saved it to Downloads).
    
-   > [!NOTE]
-   > You might want to keep the tab open for later.
+   > **Tip:** You might want to keep the tab open for later.
 
 
 ## Test the Contract
