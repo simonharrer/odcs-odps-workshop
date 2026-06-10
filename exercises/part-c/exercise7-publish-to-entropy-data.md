@@ -6,7 +6,9 @@ YAML files in a Git repository work well for a single team — but how do *other
 
 1. Go to [app.entropy-data.com](https://app.entropy-data.com), create an account, and set up your own organization, named `datameshlive2026-<yourfirstname>` (e.g., `datameshlive2026-simon`) — organization names are unique across the platform, so the suffix avoids collisions with your fellow participants. Use lowercase letters, digits, and hyphens only. The examples below use `datameshlive2026`.
 
-   > **No cloud account?** Run the [Entropy Data Community Edition](https://github.com/entropy-data/entropy-data-ce) locally instead: `docker compose -f entropy-data-ce/docker-compose.yaml up -d`, then `./scripts/setup-entropy-data-ce.sh` — it creates the account, the organization, and the API key, and writes them to your `.env` (steps 1, 2, and 4 done). Log in at [http://localhost:8081](http://localhost:8081) with `workshop@example.com` / `workshop`.
+   > [!NOTE]
+   > **No cloud account?**
+   > Run the [Entropy Data Community Edition](https://github.com/entropy-data/entropy-data-ce) locally instead: `docker compose -f entropy-data-ce/docker-compose.yaml up -d`, then `./scripts/setup-entropy-data-ce.sh` — it creates the account, the organization, and the API key, and writes them to your `.env` (steps 1, 2, and 4 done). Log in at [http://localhost:8081](http://localhost:8081) with `workshop@example.com` / `workshop`.
 
 2. Go to the organization settings and create an API key (organization write permissions).
 3. Install the Entropy Data CLI (already installed if you ran [`scripts/install.sh`](/scripts/install.sh)):
@@ -82,7 +84,9 @@ Entropy Data natively supports ODPS, so you can publish your data product files 
    entropy-data dataproducts put sku_sales --file sku_sales_per_year.odps.yaml
    ```
 
-   > **Workaround:** Due to a current bug in Entropy Data, publishing fails if the ODPS file contains `inputPorts`. Remove the `inputPorts` section from `sku_sales_per_year.odps.yaml` right before publishing.
+   > [!IMPORTANT]
+   > **Workaround**
+   > Due to a current bug in Entropy Data, publishing fails if the ODPS file contains `inputPorts`. Remove the `inputPorts` section from `sku_sales_per_year.odps.yaml` right before publishing.
 
 9. Check that they are there:
 
@@ -116,6 +120,7 @@ Entropy Data natively supports ODPS, so you can publish your data product files 
 ## Explore the Platform
 
 11. Open [app.entropy-data.com](https://app.entropy-data.com) and explore what the platform made out of your YAML files:
+ 
     - Find your two data products and their output ports
     - Open the `sku_sales_per_year` contract and compare it with the editor view
     - Follow the access agreement from the SKU Sales product to the Orders product — the dependency you declared in Exercise 4 is now a navigable link in the data product map
