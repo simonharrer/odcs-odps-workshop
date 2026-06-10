@@ -11,7 +11,7 @@ YAML files in a Git repository work well for a single team — but how do *other
 2. Go to the organization settings and create an API key (organization write permissions).
 3. Install the Entropy Data CLI (already installed if you ran [`scripts/install.sh`](/scripts/install.sh)):
 
-   ```
+   ```bash
    uv tool install entropy-data
    entropy-data --version
    ```
@@ -26,7 +26,7 @@ YAML files in a Git repository work well for a single team — but how do *other
 
    Verify the connection:
 
-   ```
+   ```bash
    entropy-data connection test
    ```
 
@@ -34,7 +34,7 @@ YAML files in a Git repository work well for a single team — but how do *other
 
 5. Contracts and data products reference a team as their owner — and Entropy Data requires the team to exist before you can publish anything that references it. Create your teams upfront:
 
-   ```
+   ```bash
    cat <<EOF | entropy-data teams put order_data_team --file -
    id: order_data_team
    name: Order Data Team
@@ -58,7 +58,7 @@ YAML files in a Git repository work well for a single team — but how do *other
 
 6. Publish all your data contracts. The ID argument must match the `id` field inside the contract:
 
-   ```
+   ```bash
    entropy-data datacontracts put orders_v1 --file orders_v1.odcs.yaml
    entropy-data datacontracts put orders_v2 --file orders_v2.odcs.yaml
    entropy-data datacontracts put sku_sales_per_year --file sku_sales_per_year.odcs.yaml
@@ -67,7 +67,7 @@ YAML files in a Git repository work well for a single team — but how do *other
 
 7. Check that they are there:
 
-   ```
+   ```bash
    entropy-data datacontracts list
    ```
 
@@ -77,7 +77,7 @@ Entropy Data natively supports ODPS, so you can publish your data product files 
 
 8. Publish both data products. The ID argument must match the `id` field inside your ODPS file:
 
-   ```
+   ```bash
    entropy-data dataproducts put orders --file orders.odps.yaml
    entropy-data dataproducts put sku_sales --file sku_sales_per_year.odps.yaml
    ```
@@ -86,7 +86,7 @@ Entropy Data natively supports ODPS, so you can publish your data product files 
 
 9. Check that they are there:
 
-   ```
+   ```bash
    entropy-data dataproducts list
    ```
 
@@ -94,7 +94,7 @@ Entropy Data natively supports ODPS, so you can publish your data product files 
 
 10. On the platform, the dependency between the two data products is an **access agreement**: the SKU Sales product consumes the `orders_v2` output port of the Orders product. Create it directly in the approved state:
 
-    ```
+    ```bash
     cat <<EOF | entropy-data access put sku_sales_consumes_orders --file -
     dataUsageAgreementSpecification: 0.0.1
     id: sku_sales_consumes_orders
@@ -125,8 +125,7 @@ Entropy Data natively supports ODPS, so you can publish your data product files 
 
 12. The platform shows whether a contract is *currently* upheld — if you feed it test results. Run your local tests again and publish the results:
 
-    ```
-    set -a; source .env; set +a
+    ```bash
     datacontract test sku_sales_per_year.odcs.yaml --publish-test-results
     ```
 
@@ -145,7 +144,7 @@ Right now, the meaning of `order_id`, `order_total`, and `sku` is duplicated acr
 
 1. Create the business entities, each with its properties:
 
-   ```
+   ```bash
    printf 'name: Main\n' | entropy-data semantics namespaces put main --file -
 
    cat <<EOF | entropy-data semantics concepts put main order --file -
@@ -184,7 +183,7 @@ Right now, the meaning of `order_id`, `order_total`, and `sku` is duplicated acr
 
 2. Relate the entities to each other — an order contains articles:
 
-   ```
+   ```bash
    cat <<EOF | entropy-data semantics relationships put main order-contains-article --file -
    type: relatedTo
    name: contains
