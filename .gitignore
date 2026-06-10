@@ -6,3 +6,4 @@ catalog
 
 orders_v?.odcs.*
 orders.odps.*
+sku_sales_per_year.*
