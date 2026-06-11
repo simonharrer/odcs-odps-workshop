@@ -5,6 +5,30 @@ The orders team introduces a new column `quantity` in the `line_items` table.
 It defaults to 1, but it is still a breaking change for data consumers — any downstream pipeline or report that relies on a fixed set of columns will need to be updated.
 So you release it as a new major version: `orders_v2`.
 
+_Where we are — a single contract over the `orders_v1` tables:_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    subgraph DC1["📄 ODCS contract · orders_v1"]
+        o1["orders"]:::con
+        l1["line_items"]:::con
+    end
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S1["schema: orders_v1"]
+            to1[("orders")]:::tbl
+            tl1[("line_items")]:::tbl
+        end
+    end
+    o1 -. describes .-> to1
+    l1 -. describes .-> tl1
+    tl1 -- "order_id → orders" --> to1
+    style DC1 fill:#eff6ff,stroke:#2563eb
+    style PG fill:#ffffff,stroke:#64748b
+    style S1 fill:#f0fdf4,stroke:#16a34a
+```
+
 The `orders_v2` schema holds both tables — `orders` is unchanged, `line_items` has the new `quantity` column:
 
 ```sql
@@ -85,6 +109,42 @@ The raw data is also available as JSON files in [`data/orders_v2/`](/data/orders
 
 
 8. As a shortcut for this workshop, jump straight to the end state: set [`orders_v1.odcs.yaml`](../../orders_v1.odcs.yaml) to `retired` and [`orders_v2.odcs.yaml`](../../orders_v2.odcs.yaml) to `active` in your contract files.
+
+_After this exercise — a new `orders_v2` contract over the evolved tables; `orders_v1` is retired:_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    classDef ret fill:#f1f5f9,stroke:#94a3b8,color:#64748b;
+    subgraph DC1["📄 orders_v1 · retired"]
+        o1["orders"]:::ret
+        l1["line_items"]:::ret
+    end
+    subgraph DC2["📄 orders_v2 · active"]
+        o2["orders"]:::con
+        l2["line_items · +quantity"]:::con
+    end
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S1["schema: orders_v1"]
+            to1[("orders")]:::tbl
+            tl1[("line_items")]:::tbl
+        end
+        subgraph S2["schema: orders_v2"]
+            to2[("orders")]:::tbl
+            tl2[("line_items · +quantity")]:::tbl
+        end
+    end
+    o1 -. describes .-> to1
+    l1 -. describes .-> tl1
+    o2 -. describes .-> to2
+    l2 -. describes .-> tl2
+    style DC1 fill:#f8fafc,stroke:#94a3b8
+    style DC2 fill:#eff6ff,stroke:#2563eb
+    style PG fill:#ffffff,stroke:#64748b
+    style S1 fill:#f8fafc,stroke:#94a3b8
+    style S2 fill:#f0fdf4,stroke:#16a34a
+```
 
 
 [Data Contract Editor]: <https://editor.datacontract.com>
