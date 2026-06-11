@@ -4,6 +4,55 @@ A consumer-driven data contract lets the *consumer* define what subset of data t
 
 Your view from [Exercise 5](exercise5-implement-your-data-product.md) reads the producer's tables directly — it implicitly depends on the whole `orders_v2` contract, even though it only needs five fields. Make that explicit: define a consumer-driven contract for exactly those fields, and create views so you access only what you actually need.
 
+_Where we are — your view reads the producer's tables directly (thick edges), coupling you to all of `orders_v2`:_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef view fill:#fef9c3,stroke:#ca8a04,color:#713f12;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    classDef ret fill:#f1f5f9,stroke:#94a3b8,color:#64748b;
+    classDef port fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    subgraph DPO["📦 Data Product · Orders"]
+        rv1["orders_v1 · retired"]:::ret
+        p2(["output port · orders_v2"]):::port
+        subgraph DC2["📄 orders_v2"]
+            o2["orders"]:::con
+            l2["line_items"]:::con
+        end
+    end
+    subgraph DPS["📦 Data Product · SKU Sales"]
+        ip(["input port · orders_v2"]):::port
+        op(["output port · sku_sales_per_year"]):::port
+        subgraph SC["📄 sku_sales_per_year"]
+            ss["sku_sales_per_year"]:::con
+        end
+    end
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S2["schema: orders_v2"]
+            to2[("orders")]:::tbl
+            tl2[("line_items")]:::tbl
+        end
+        subgraph SAN["schema: analytics"]
+            vss[/"sku_sales_per_year"/]:::view
+        end
+    end
+    p2 --> DC2
+    DC2 -. describes .-> S2
+    ip -. consumes .-> p2
+    op --> SC
+    SC -. describes .-> vss
+    vss == reads ==> to2
+    vss == reads ==> tl2
+    style DPO fill:#faf5ff,stroke:#7c3aed
+    style DPS fill:#faf5ff,stroke:#7c3aed
+    style DC2 fill:#eff6ff,stroke:#2563eb
+    style SC fill:#eff6ff,stroke:#2563eb
+    style PG fill:#ffffff,stroke:#64748b
+    style S2 fill:#f0fdf4,stroke:#16a34a
+    style SAN fill:#fffbeb,stroke:#ca8a04
+```
+
 
 ## Define What You Need
 
@@ -60,3 +109,65 @@ Your view from [Exercise 5](exercise5-implement-your-data-product.md) reads the 
 Your data product now touches only the fields in your consumer-driven contract.
 The producer can see exactly what you depend on — everything else in `orders_v2` may change without breaking you.
 Best of all: the orders team can run *your* contract (`datacontract test`) in *their* CI pipeline, and catch a change that would break you before it ever ships.
+
+_After this exercise — narrow input views and a consumer-driven contract sit between you and the producer; your analytics view only ever touches the five fields you need:_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef view fill:#fef9c3,stroke:#ca8a04,color:#713f12;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    classDef ret fill:#f1f5f9,stroke:#94a3b8,color:#64748b;
+    classDef port fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    subgraph DPO["📦 Data Product · Orders"]
+        rv1["orders_v1 · retired"]:::ret
+        p2(["output port · orders_v2"]):::port
+        subgraph DC2["📄 orders_v2"]
+            o2["orders"]:::con
+            l2["line_items"]:::con
+        end
+    end
+    subgraph DPS["📦 Data Product · SKU Sales"]
+        ip(["input port · orders_v2"]):::port
+        op(["output port · sku_sales_per_year"]):::port
+        subgraph CDC["📄 orders_v2_consumer_sku_sales · consumer-driven input"]
+            co["orders"]:::con
+            cl["line_items"]:::con
+        end
+        subgraph SC["📄 sku_sales_per_year · output"]
+            ss["sku_sales_per_year"]:::con
+        end
+    end
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S2["schema: orders_v2"]
+            to2[("orders")]:::tbl
+            tl2[("line_items")]:::tbl
+        end
+        subgraph SIN["schema: sku_sales_input"]
+            vo[/"orders"/]:::view
+            vl[/"line_items"/]:::view
+        end
+        subgraph SAN["schema: analytics"]
+            vss[/"sku_sales_per_year"/]:::view
+        end
+    end
+    p2 --> DC2
+    DC2 -. describes .-> S2
+    ip -. consumes .-> p2
+    op --> SC
+    CDC -. describes .-> SIN
+    SC -. describes .-> vss
+    vo == reads ==> to2
+    vl == reads ==> tl2
+    vss == reads ==> vo
+    vss == reads ==> vl
+    style DPO fill:#faf5ff,stroke:#7c3aed
+    style DPS fill:#faf5ff,stroke:#7c3aed
+    style DC2 fill:#eff6ff,stroke:#2563eb
+    style CDC fill:#eff6ff,stroke:#2563eb
+    style SC fill:#eff6ff,stroke:#2563eb
+    style PG fill:#ffffff,stroke:#64748b
+    style S2 fill:#f0fdf4,stroke:#16a34a
+    style SIN fill:#fffbeb,stroke:#ca8a04
+    style SAN fill:#fffbeb,stroke:#ca8a04
+```

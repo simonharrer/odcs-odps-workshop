@@ -4,6 +4,22 @@ You are the owner of the **orders** data in your company's e-commerce platform.
 The data lives in a PostgreSQL database and consists of two tables: `orders` (containing order details like timestamps, totals, and customer information) and `line_items` (containing the individual items in each order, linked by `order_id`).
 Your goal is to define a data contract so that consumers of your data know exactly what to expect.
 
+_You start with raw tables in PostgreSQL — no contract, so consumers have to guess the shape:_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S1["schema: orders_v1"]
+            to1[("orders")]:::tbl
+            tl1[("line_items")]:::tbl
+        end
+    end
+    tl1 -- "order_id → orders" --> to1
+    style PG fill:#ffffff,stroke:#64748b
+    style S1 fill:#f0fdf4,stroke:#16a34a
+```
+
 
 ## Install the CLI & Start the Database
 
@@ -311,6 +327,30 @@ Let's add some more detail to the contract...
 ## Set to Active
 
 24. Your contract is complete — set `status` to `active`!
+
+_After this exercise — the `orders_v1` tables are under an ODCS contract that describes them:_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    subgraph DC1["📄 ODCS contract · orders_v1"]
+        o1["orders"]:::con
+        l1["line_items"]:::con
+    end
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S1["schema: orders_v1"]
+            to1[("orders")]:::tbl
+            tl1[("line_items")]:::tbl
+        end
+    end
+    o1 -. describes .-> to1
+    l1 -. describes .-> tl1
+    tl1 -- "order_id → orders" --> to1
+    style DC1 fill:#eff6ff,stroke:#2563eb
+    style PG fill:#ffffff,stroke:#64748b
+    style S1 fill:#f0fdf4,stroke:#16a34a
+```
 
 
 ## Bonus

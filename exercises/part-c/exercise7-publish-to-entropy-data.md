@@ -2,6 +2,68 @@
 
 YAML files in a Git repository work well for a single team — but how do *other* teams discover your data products, browse the contracts, and request access? For that you need a data product platform. In this exercise, you publish everything you built in Part A and Part B to [Entropy Data](https://entropy-data.com) using the [Entropy Data CLI](https://github.com/entropy-data/entropy-data-cli).
 
+_Where we are — everything you built lives as YAML files and SQL views, on one team's disk:_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef view fill:#fef9c3,stroke:#ca8a04,color:#713f12;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    classDef ret fill:#f1f5f9,stroke:#94a3b8,color:#64748b;
+    classDef port fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    subgraph DPO["📦 Data Product · Orders"]
+        rv1["orders_v1 · retired"]:::ret
+        p2(["output port · orders_v2"]):::port
+        subgraph DC2["📄 orders_v2"]
+            o2["orders"]:::con
+            l2["line_items"]:::con
+        end
+    end
+    subgraph DPS["📦 Data Product · SKU Sales"]
+        ip(["input port · orders_v2"]):::port
+        op(["output port · sku_sales_per_year"]):::port
+        subgraph CDC["📄 orders_v2_consumer_sku_sales"]
+            co["orders"]:::con
+            cl["line_items"]:::con
+        end
+        subgraph SC["📄 sku_sales_per_year"]
+            ss["sku_sales_per_year"]:::con
+        end
+    end
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S2["schema: orders_v2"]
+            to2[("orders")]:::tbl
+            tl2[("line_items")]:::tbl
+        end
+        subgraph SIN["schema: sku_sales_input"]
+            vo[/"orders"/]:::view
+            vl[/"line_items"/]:::view
+        end
+        subgraph SAN["schema: analytics"]
+            vss[/"sku_sales_per_year"/]:::view
+        end
+    end
+    p2 --> DC2
+    DC2 -. describes .-> S2
+    ip -. consumes .-> p2
+    op --> SC
+    CDC -. describes .-> SIN
+    SC -. describes .-> vss
+    vo == reads ==> to2
+    vl == reads ==> tl2
+    vss == reads ==> vo
+    vss == reads ==> vl
+    style DPO fill:#faf5ff,stroke:#7c3aed
+    style DPS fill:#faf5ff,stroke:#7c3aed
+    style DC2 fill:#eff6ff,stroke:#2563eb
+    style CDC fill:#eff6ff,stroke:#2563eb
+    style SC fill:#eff6ff,stroke:#2563eb
+    style PG fill:#ffffff,stroke:#64748b
+    style S2 fill:#f0fdf4,stroke:#16a34a
+    style SIN fill:#fffbeb,stroke:#ca8a04
+    style SAN fill:#fffbeb,stroke:#ca8a04
+```
+
 ## Get Access
 
 1. Go to [app.entropy-data.com](https://app.entropy-data.com), create an account, and set up your own organization, named `datameshlive2026-<yourfirstname>` (e.g., `datameshlive2026-simon`) — organization names are unique across the platform, so the suffix avoids collisions with your fellow participants. Use lowercase letters, digits, and hyphens only. The examples below use `datameshlive2026`.
@@ -133,6 +195,38 @@ Entropy Data natively supports ODPS, so you can publish your data product files 
     The results are published to the Entropy Data host configured in `ENTROPY_DATA_HOST`.
 
     Find the test results on the contract page in the UI.
+
+_After this exercise — both products and all four contracts live on the Entropy Data platform, where other teams can discover them and the access agreement links the two products:_
+
+```mermaid
+flowchart TB
+    classDef prod fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    classDef ok fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    subgraph EP["🌐 Entropy Data platform"]
+        subgraph DPO["📦 Orders"]
+            dpo["output ports · orders_v1 · orders_v2"]:::prod
+        end
+        subgraph DPS["📦 SKU Sales"]
+            dps["output port · sku_sales_per_year"]:::prod
+        end
+        subgraph CON["📄 Data contracts"]
+            c1["orders_v1"]:::con
+            c2["orders_v2"]:::con
+            c3["sku_sales_per_year"]:::con
+            c4["orders_v2_consumer_sku_sales"]:::con
+        end
+        tr["✅ test results published"]:::ok
+    end
+    DPS == "access agreement · consumes orders_v2" ==> DPO
+    DPO -. offers .-> CON
+    DPS -. offers .-> CON
+    c3 -. tested by .-> tr
+    style EP fill:#f8fafc,stroke:#0ea5e9
+    style DPO fill:#faf5ff,stroke:#7c3aed
+    style DPS fill:#faf5ff,stroke:#7c3aed
+    style CON fill:#eff6ff,stroke:#2563eb
+```
 
 ## Bonus
 

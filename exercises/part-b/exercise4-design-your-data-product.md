@@ -6,6 +6,48 @@ You work **contract-first**: before writing any SQL, you design the data contrac
 
 You consume the `orders_v2` contract — it guarantees you the `quantity` column.
 
+_Where we are — the Orders data product, ready to be consumed:_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    classDef ret fill:#f1f5f9,stroke:#94a3b8,color:#64748b;
+    classDef port fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    subgraph DP["📦 Data Product · Orders"]
+        p1(["output port · orders_v1"]):::port
+        p2(["output port · orders_v2"]):::port
+        subgraph DC1["📄 orders_v1 · retired"]
+            o1["orders"]:::ret
+            l1["line_items"]:::ret
+        end
+        subgraph DC2["📄 orders_v2 · active"]
+            o2["orders"]:::con
+            l2["line_items"]:::con
+        end
+    end
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S1["schema: orders_v1"]
+            to1[("orders")]:::tbl
+            tl1[("line_items")]:::tbl
+        end
+        subgraph S2["schema: orders_v2"]
+            to2[("orders")]:::tbl
+            tl2[("line_items")]:::tbl
+        end
+    end
+    p1 --> DC1
+    p2 --> DC2
+    DC1 -. describes .-> S1
+    DC2 -. describes .-> S2
+    style DP fill:#faf5ff,stroke:#7c3aed
+    style DC1 fill:#f8fafc,stroke:#94a3b8
+    style DC2 fill:#eff6ff,stroke:#2563eb
+    style PG fill:#ffffff,stroke:#64748b
+    style S1 fill:#f8fafc,stroke:#94a3b8
+    style S2 fill:#f0fdf4,stroke:#16a34a
+```
+
 ## Design the Contract
 
 1. Create a new data contract in the [Data Contract Editor]:
@@ -96,6 +138,53 @@ You consume the `orders_v2` contract — it guarantees you the `quantity` column
    ```bash
    uvx check-jsonschema --schemafile schemas/odps-json-schema-v1.0.0.json sku_sales_per_year.odps.yaml
    ```
+
+_After this exercise — the SKU Sales product is designed contract-first: an input port consumes `orders_v2`, the output contract is written, but the view is only specified (dashed — you build it next):_
+
+```mermaid
+flowchart TB
+    classDef tbl fill:#dcfce7,stroke:#16a34a,color:#14532d;
+    classDef con fill:#dbeafe,stroke:#2563eb,color:#1e3a5f;
+    classDef ret fill:#f1f5f9,stroke:#94a3b8,color:#64748b;
+    classDef port fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+    classDef plan fill:#fefce8,stroke:#a8a29e,color:#78716c,stroke-dasharray:4 3;
+    subgraph DPO["📦 Data Product · Orders"]
+        rv1["orders_v1 · retired"]:::ret
+        p2(["output port · orders_v2"]):::port
+        subgraph DC2["📄 orders_v2 · active"]
+            o2["orders"]:::con
+            l2["line_items"]:::con
+        end
+    end
+    subgraph DPS["📦 Data Product · SKU Sales · draft"]
+        ip(["input port · orders_v2"]):::port
+        op(["output port · sku_sales_per_year"]):::port
+        subgraph SC["📄 sku_sales_per_year · draft"]
+            ss["sku_sales_per_year"]:::con
+        end
+    end
+    subgraph PG["🐘 PostgreSQL"]
+        subgraph S2["schema: orders_v2"]
+            to2[("orders")]:::tbl
+            tl2[("line_items")]:::tbl
+        end
+        subgraph SAN["schema: analytics"]
+            vss[/"sku_sales_per_year · not built yet"/]:::plan
+        end
+    end
+    p2 --> DC2
+    DC2 -. describes .-> S2
+    ip -. consumes .-> p2
+    op --> SC
+    SC -. specifies .-> vss
+    style DPO fill:#faf5ff,stroke:#7c3aed
+    style DPS fill:#faf5ff,stroke:#7c3aed
+    style DC2 fill:#eff6ff,stroke:#2563eb
+    style SC fill:#eff6ff,stroke:#2563eb
+    style PG fill:#ffffff,stroke:#64748b
+    style S2 fill:#f0fdf4,stroke:#16a34a
+    style SAN fill:#fffbeb,stroke:#a8a29e
+```
 
 [Exercise 3]: <../part-a/exercise3-describe-your-data-product.md>
 [Data Contract Editor]: <https://editor.datacontract.com>
